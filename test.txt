@@ -1,0 +1,36 @@
+resource "azurerm_management_group" "example" {
+  display_name = "Some Management Group"
+}
+
+resource "azurerm_policy_definition" "example" {
+  name                = "only-deploy-in-westeurope"
+  display_name = "display"
+  policy_type         = "Custom"
+  mode                = "All"
+  management_group_id = azurerm_management_group.example.group_id
+
+  policy_rule = <<POLICY_RULE
+    {
+    "if": {
+      "not": {
+        "field": "location",
+        "equals": "westeurope"
+      }
+    },
+    "then": {
+      "effect": "Deny"
+    }
+  }
+POLICY_RULE
+}
+
+resource "azurerm_management_group_policy_assignment" "example" {
+  name                 = "example-policy"
+  display_name = "iam display name"
+  policy_definition_id = azurerm_policy_definition.example.id
+  management_group_id  = azurerm_management_group.example.id
+}
+resource "azurerm_management_group" "newmgchiled" {
+  display_name = "child"
+  parent_management_group_id = azurerm_management_group.example.id
+}

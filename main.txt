@@ -1,0 +1,81 @@
+data "azurerm_subscription" "current" {
+}
+
+resource "azurerm_management_group" "cognizant_managementgroup_root" {
+  display_name = "Cognizant"
+  
+
+}
+
+#data "azurerm_management_group" "mgname" {
+ # display_name = "mgname_root"
+  #group_id = azurerm_management_group.cognizant_managementgroup_root
+#}
+
+#data "azurerm_client_config" "clientconfig" {
+#}
+
+/*
+resource "azurerm_role_assignment" "role1" {
+ scope = azurerm_management_group.cognizant_managementgroup_root.id
+role_definition_name = "Blueprint Contributor"
+principal_id = data.azurerm_client_config.clientconfig.object_id
+}
+
+  
+
+
+resource "azurerm_role_assignment" "role2" {
+ scope = "/providers/Microsoft.Management/managementGroups/azurerm_management_group.cognizant_managementgroup_root.id"
+role_definition_name = "Blueprint Operator"
+principal_id = data.azurerm_client_config.clientconfig.object_id
+}
+
+resource "azurerm_role_assignment" "role3" {
+ scope = "/providers/Microsoft.Management/managementGroups/azurerm_management_group.cognizant_managementgroup_root.id"
+role_definition_name = "Resource Policy Contributor"
+principal_id = data.azurerm_client_config.clientconfig.object_id
+}
+*/
+resource "azurerm_policy_definition" "policydef1" {
+    name = "policy definition"
+  display_name = "only-deploy-in-westeurope"
+  policy_type = "Custom"
+  mode = "All"
+  management_group_id = azurerm_management_group.cognizant_managementgroup_child1.id
+  policy_rule = <<POLICY_RULE
+    {
+    "if": {
+      "not": {
+        "field": "location",
+        "equals": "westeurope"
+      }
+    },
+    "then": {
+      "effect": "Deny"
+    }
+  }
+POLICY_RULE
+depends_on = [azurerm_management_group.cognizant_managementgroup_root, azurerm_management_group.cognizant_managementgroup_child1 ]
+  
+
+}
+
+
+resource "azurerm_management_group_policy_assignment" "policyassign1" {
+  name = "assign_policy"
+  policy_definition_id = azurerm_policy_definition.policydef1.id
+  management_group_id = azurerm_management_group.cognizant_managementgroup_root.id
+}
+ 
+
+
+resource "azurerm_management_group" "cognizant_managementgroup_child1" {
+  display_name               = "HR"
+  parent_management_group_id = azurerm_management_group.cognizant_managementgroup_root.id
+
+  #subscription_ids = [
+   # data.azurerm_subscription.current.subscription_id,
+  #]
+  # other subscription IDs can go here
+}
